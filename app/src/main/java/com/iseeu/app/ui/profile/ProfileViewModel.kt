@@ -1,6 +1,7 @@
 package com.iseeu.app.ui.profile
 
 import android.content.Context
+import com.google.firebase.FirebaseException
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -38,10 +39,14 @@ class ProfileViewModel @Inject constructor(
             familyCode = code
             isSharingEnabled = prefsDataStore.isSharingEnabled.first()
 
-            val uid = authRepository.ensureSignedIn()
-            memberRepository.getMemberOnce(code, uid)?.let { member ->
-                displayName = member.displayName
-                avatarColor = member.avatarColor
+            try {
+                val uid = authRepository.ensureSignedIn()
+                memberRepository.getMemberOnce(code, uid)?.let { member ->
+                    displayName = member.displayName
+                    avatarColor = member.avatarColor
+                }
+            } catch (e: FirebaseException) {
+                // leave the local defaults in place; the user can still edit and retry save()
             }
         }
     }
@@ -58,8 +63,12 @@ class ProfileViewModel @Inject constructor(
         if (displayName.isBlank()) return
         viewModelScope.launch {
             val code = prefsDataStore.familyCode.first() ?: return@launch
-            val uid = authRepository.ensureSignedIn()
-            memberRepository.updateProfile(code, uid, displayName.trim(), avatarColor)
+            try {
+                val uid = authRepository.ensureSignedIn()
+                memberRepository.updateProfile(code, uid, displayName.trim(), avatarColor)
+            } catch (e: FirebaseException) {
+                // no retry/error UI in Phase 1 — the edit just silently doesn't persist this attempt
+            }
         }
     }
 
@@ -75,8 +84,13 @@ class ProfileViewModel @Inject constructor(
         viewModelScope.launch {
             prefsDataStore.setSharingEnabled(enabled)
             val code = prefsDataStore.familyCode.first() ?: return@launch
-            val uid = authRepository.ensureSignedIn()
-            memberRepository.setVisibility(code, uid, enabled)
+            try {
+                val uid = authRepository.ensureSignedIn()
+                memberRepository.setVisibility(code, uid, enabled)
+            } catch (e: FirebaseException) {
+                // the service start/stop above already reflects the toggle locally; the Firestore
+                // side will catch up next time this succeeds
+            }
         }
     }
 }

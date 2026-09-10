@@ -29,9 +29,15 @@ class MapViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val familyCode = prefsDataStore.familyCode.first() ?: return@launch
-            val uid = authRepository.ensureSignedIn()
-            memberRepository.observeMembers(familyCode, uid).collect { list ->
-                _members.value = list.sortedByDescending { it.isSelf }
+            // A transient auth/network failure here shouldn't crash the whole app — worst case,
+            // the map just stays empty until the next successful collection.
+            try {
+                val uid = authRepository.ensureSignedIn()
+                memberRepository.observeMembers(familyCode, uid).collect { list ->
+                    _members.value = list.sortedByDescending { it.isSelf }
+                }
+            } catch (e: com.google.firebase.FirebaseException) {
+                // leave _members as-is; nothing else to do without a retry UI in Phase 1
             }
         }
     }

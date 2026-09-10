@@ -1,5 +1,6 @@
 package com.iseeu.app.data.repository
 
+import com.google.firebase.FirebaseException
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.FirebaseFirestoreException
@@ -20,7 +21,13 @@ class FamilyRepositoryImpl @Inject constructor(
 ) : FamilyRepository {
 
     override suspend fun createFamily(displayName: String): CreateFamilyResult {
-        val uid = authRepository.ensureSignedIn()
+        val uid = try {
+            authRepository.ensureSignedIn()
+        } catch (e: IOException) {
+            return CreateFamilyResult.Offline
+        } catch (e: FirebaseException) {
+            return CreateFamilyResult.Failed
+        }
 
         repeat(MAX_ATTEMPTS) {
             val code = FamilyCodeGenerator.next()
@@ -59,16 +66,18 @@ class FamilyRepositoryImpl @Inject constructor(
                 }
             } catch (e: IOException) {
                 return CreateFamilyResult.Offline
+            } catch (e: FirebaseException) {
+                return CreateFamilyResult.Failed
             }
         }
         return CreateFamilyResult.Failed
     }
 
     override suspend fun joinFamily(code: String, displayName: String): JoinFamilyResult {
-        val uid = authRepository.ensureSignedIn()
         val normalizedCode = FamilyCodeGenerator.normalize(code)
 
         return try {
+            val uid = authRepository.ensureSignedIn()
             val familyRef = FirestorePaths.familyDoc(firestore, normalizedCode)
             val snapshot = familyRef.get().await()
             if (!snapshot.exists()) return JoinFamilyResult.NotFound
@@ -87,6 +96,8 @@ class FamilyRepositoryImpl @Inject constructor(
             if (e.code == FirebaseFirestoreException.Code.UNAVAILABLE) JoinFamilyResult.Offline else JoinFamilyResult.Failed
         } catch (e: IOException) {
             JoinFamilyResult.Offline
+        } catch (e: FirebaseException) {
+            JoinFamilyResult.Failed
         }
     }
 
