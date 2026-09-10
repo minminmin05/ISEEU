@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
@@ -23,6 +24,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
@@ -65,6 +67,10 @@ fun PermissionRationaleScreen(
         ActivityResultContracts.RequestPermission(),
     ) { viewModel.refresh(context) }
 
+    val activityRecognitionLauncher = rememberLauncherForActivityResult(
+        ActivityResultContracts.RequestPermission(),
+    ) { viewModel.refresh(context) }
+
     when (viewModel.step) {
         PermissionStep.FOREGROUND_LOCATION -> PermissionStepContent(
             title = stringResource(R.string.permission_location_title),
@@ -92,6 +98,12 @@ fun PermissionRationaleScreen(
                 }
             },
         )
+        PermissionStep.ACTIVITY_RECOGNITION -> PermissionStepContent(
+            title = stringResource(R.string.permission_activity_title),
+            body = stringResource(R.string.permission_activity_body),
+            icon = Icons.Filled.DirectionsCar,
+            onAllow = { activityRecognitionLauncher.launch(Manifest.permission.ACTIVITY_RECOGNITION) },
+        )
         PermissionStep.DONE -> Unit
     }
 }
@@ -101,6 +113,7 @@ private fun PermissionStepContent(
     title: String,
     body: String,
     onAllow: () -> Unit,
+    icon: ImageVector = Icons.Filled.LocationOn,
     allowLabel: String = stringResource(R.string.permission_allow),
 ) {
     Column(
@@ -108,7 +121,7 @@ private fun PermissionStepContent(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Icon(Icons.Filled.LocationOn, contentDescription = null, modifier = Modifier.size(64.dp))
+        Icon(icon, contentDescription = null, modifier = Modifier.size(64.dp))
         Spacer(Modifier.height(24.dp))
         Text(title, style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
         Spacer(Modifier.height(12.dp))

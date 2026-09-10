@@ -37,18 +37,30 @@
     <string name="permission_open_settings">เปิดการตั้งค่า</string>
     <string name="permission_notifications_title">รับการแจ้งเตือน</string>
     <string name="permission_notifications_body">ISEEU จะแสดงการแจ้งเตือนค้างไว้ขณะแชร์ตำแหน่ง เพื่อให้คุณรู้ว่ากำลังทำงานอยู่</string>
+    <string name="permission_activity_title">ตรวจจับสถานะการเดินทาง</string>
+    <string name="permission_activity_body">ISEEU จะแสดงสถานะว่ากำลังขับรถหรือเดินอยู่ให้ครอบครัวเห็น โดยใช้เซนเซอร์ตรวจจับกิจกรรมของเครื่อง</string>
     <string name="permission_allow">อนุญาต</string>
 
     <!-- Map -->
     <string name="profile_content_description">โปรไฟล์</string>
+    <string name="history_content_description">ประวัติที่อยู่</string>
     <string name="location_hidden">ซ่อนตำแหน่ง</string>
     <string name="no_location_yet">ยังไม่มีตำแหน่ง</string>
+
+    <!-- History -->
+    <string name="history_title">ประวัติที่อยู่</string>
+    <string name="history_empty">ยังไม่มีประวัติที่อยู่สำหรับคนนี้</string>
+    <string name="history_marker_start">จุดเริ่มต้น</string>
+    <string name="history_marker_latest">ล่าสุด</string>
 
     <!-- Profile -->
     <string name="profile_title">โปรไฟล์ของคุณ</string>
     <string name="back_content_description">ย้อนกลับ</string>
     <string name="profile_display_name_label">ชื่อที่แสดง</string>
     <string name="profile_avatar_color_label">สีไอคอนประจำตัว</string>
+    <string name="profile_change_photo">เปลี่ยนรูปโปรไฟล์</string>
+    <string name="profile_photo_content_description">รูปโปรไฟล์</string>
+    <string name="profile_photo_upload_error">อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง</string>
     <string name="selected_content_description">เลือกแล้ว</string>
     <string name="action_save">บันทึก</string>
     <string name="profile_share_location_title">แชร์ตำแหน่งของฉัน</string>

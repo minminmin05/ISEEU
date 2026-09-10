@@ -13,10 +13,13 @@ import com.iseeu.app.MainActivity
 import com.iseeu.app.R
 import com.iseeu.app.data.local.PrefsDataStore
 import com.iseeu.app.data.repository.MemberRepository
+import com.iseeu.app.location.ActivityTransitionClient
 import com.iseeu.app.location.AdaptiveLocationStrategy
 import com.iseeu.app.location.LocationClient
+import com.iseeu.app.util.PermissionUtils
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.first
@@ -35,6 +38,7 @@ class LocationForegroundService : Service() {
     @Inject lateinit var adaptiveStrategy: AdaptiveLocationStrategy
     @Inject lateinit var memberRepository: MemberRepository
     @Inject lateinit var prefsDataStore: PrefsDataStore
+    @Inject lateinit var activityTransitionClient: ActivityTransitionClient
 
     private val serviceScope = CoroutineScope(SupervisorJob())
     private var lastServicedRefreshAt = 0L
@@ -45,6 +49,14 @@ class LocationForegroundService : Service() {
         // with ForegroundServiceDidNotStartInTimeException.
         startForeground(NOTIFICATION_ID, buildNotification())
         serviceScope.launch { runTracking() }
+
+        // Unlike the other permissions, ACTIVITY_RECOGNITION may genuinely be missing here: it
+        // was added after the rest of the permission flow, so an already-onboarded install won't
+        // have been asked for it yet. Skip quietly rather than crash — activity status just stays
+        // unknown until the user grants it from a later app update's permission screen.
+        if (PermissionUtils.hasActivityRecognitionPermission(this)) {
+            serviceScope.launch { activityTransitionClient.start() }
+        }
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int = START_STICKY
@@ -52,6 +64,11 @@ class LocationForegroundService : Service() {
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onDestroy() {
+        // Deliberately NOT serviceScope here: it's cancelled two lines down, which would race
+        // this cleanup call and likely cancel it before the unregister request actually goes out.
+        if (PermissionUtils.hasActivityRecognitionPermission(this)) {
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { activityTransitionClient.stop() }
+        }
         serviceScope.cancel()
         super.onDestroy()
     }
@@ -69,6 +86,10 @@ class LocationForegroundService : Service() {
                 val now = System.currentTimeMillis()
                 if (adaptiveStrategy.shouldWrite(location, now)) {
                     memberRepository.writeLocation(familyCode, uid, location.latitude, location.longitude)
+                    // Riding on the same write-gate as the current-location write is deliberate —
+                    // it's already tuned to "meaningfully moved or enough time passed", which is
+                    // exactly the cadence a history trail wants too.
+                    memberRepository.appendHistoryEntry(familyCode, uid, location.latitude, location.longitude)
                     adaptiveStrategy.markWritten(location, now)
                 }
             }

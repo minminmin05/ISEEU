@@ -8,16 +8,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.DirectionsCar
+import androidx.compose.material.icons.filled.DirectionsWalk
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SmallFloatingActionButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,6 +46,7 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.iseeu.app.R
+import com.iseeu.app.domain.model.ActivityStatus
 import com.iseeu.app.domain.model.FamilyMember
 import com.iseeu.app.ui.map.components.LastUpdatedLabel
 import com.iseeu.app.ui.map.components.MemberAvatar
@@ -53,6 +60,7 @@ import org.osmdroid.views.overlay.Marker
 fun MapScreen(
     viewModel: MapViewModel = hiltViewModel(),
     onOpenProfile: () -> Unit,
+    onOpenHistory: () -> Unit,
 ) {
     val members by viewModel.members.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -61,8 +69,13 @@ fun MapScreen(
 
     Scaffold(
         floatingActionButton = {
-            FloatingActionButton(onClick = onOpenProfile) {
-                Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.profile_content_description))
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                SmallFloatingActionButton(onClick = onOpenHistory) {
+                    Icon(Icons.Filled.History, contentDescription = stringResource(R.string.history_content_description))
+                }
+                FloatingActionButton(onClick = onOpenProfile) {
+                    Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.profile_content_description))
+                }
             }
         },
         bottomBar = {
@@ -101,7 +114,15 @@ private fun MemberRosterRow(
                     modifier = Modifier.padding(10.dp).width(84.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    MemberAvatar(displayName = member.displayName, colorHex = member.avatarColor, size = 40.dp)
+                    Box {
+                        MemberAvatar(
+                            displayName = member.displayName,
+                            colorHex = member.avatarColor,
+                            avatarUrl = member.avatarUrl,
+                            size = 40.dp,
+                        )
+                        ActivityBadge(status = member.activityStatus, modifier = Modifier.align(Alignment.BottomEnd))
+                    }
                     Spacer(Modifier.height(4.dp))
                     Text(
                         text = member.displayName,
@@ -122,6 +143,28 @@ private fun MemberRosterRow(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun ActivityBadge(status: ActivityStatus, modifier: Modifier = Modifier) {
+    val icon = when (status) {
+        ActivityStatus.DRIVING -> Icons.Filled.DirectionsCar
+        ActivityStatus.WALKING -> Icons.Filled.DirectionsWalk
+        ActivityStatus.STILL, ActivityStatus.UNKNOWN -> null
+    } ?: return
+
+    Surface(
+        shape = CircleShape,
+        color = MaterialTheme.colorScheme.secondary,
+        modifier = modifier.size(18.dp),
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSecondary,
+            modifier = Modifier.padding(3.dp),
+        )
     }
 }
 

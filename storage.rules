@@ -1,0 +1,31 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(code) {
+      return signedIn() &&
+        firestore.exists(/databases/(default)/documents/families/$(code)/members/$(request.auth.uid));
+    }
+
+    // Profile photos: avatars/{familyCode}/{uid}.jpg
+    // Readable by any signed-in member of that family (not gated by the location-privacy toggle —
+    // a profile photo isn't location data). Writable only by the photo's own owner.
+    match /avatars/{code}/{uid}.jpg {
+      allow read: if isMember(code);
+
+      allow write: if signedIn() && uid == request.auth.uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+
+      allow delete: if false;
+    }
+
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}

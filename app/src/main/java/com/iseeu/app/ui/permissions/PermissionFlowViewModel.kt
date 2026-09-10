@@ -9,7 +9,7 @@ import com.iseeu.app.util.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
-enum class PermissionStep { FOREGROUND_LOCATION, BACKGROUND_LOCATION, NOTIFICATIONS, DONE }
+enum class PermissionStep { FOREGROUND_LOCATION, BACKGROUND_LOCATION, NOTIFICATIONS, ACTIVITY_RECOGNITION, DONE }
 
 @HiltViewModel
 class PermissionFlowViewModel @Inject constructor() : ViewModel() {
@@ -22,6 +22,7 @@ class PermissionFlowViewModel @Inject constructor() : ViewModel() {
             !PermissionUtils.hasForegroundLocationPermission(context) -> PermissionStep.FOREGROUND_LOCATION
             !PermissionUtils.hasBackgroundLocationPermission(context) -> PermissionStep.BACKGROUND_LOCATION
             !PermissionUtils.hasNotificationPermission(context) -> PermissionStep.NOTIFICATIONS
+            !PermissionUtils.hasActivityRecognitionPermission(context) -> PermissionStep.ACTIVITY_RECOGNITION
             else -> PermissionStep.DONE
         }
     }

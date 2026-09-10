@@ -30,7 +30,7 @@ service cloud.firestore {
 
         allow create: if signedIn() && uid == request.auth.uid
           && request.resource.data.keys().hasOnly(
-               ['displayName', 'avatarColor', 'isVisible', 'activityStatus', 'profileUpdatedAt'])
+               ['displayName', 'avatarColor', 'avatarUrl', 'isVisible', 'activityStatus', 'profileUpdatedAt'])
           && request.resource.data.isVisible is bool
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() > 0
@@ -40,7 +40,7 @@ service cloud.firestore {
           // owner may update their own allowed fields
           (uid == request.auth.uid &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(
-              ['displayName', 'avatarColor', 'isVisible', 'activityStatus', 'profileUpdatedAt', 'refreshRequestedAt']) &&
+              ['displayName', 'avatarColor', 'avatarUrl', 'isVisible', 'activityStatus', 'profileUpdatedAt', 'refreshRequestedAt']) &&
             request.resource.data.displayName is string &&
             request.resource.data.displayName.size() > 0 &&
             request.resource.data.displayName.size() <= 40)
@@ -69,8 +69,24 @@ service cloud.firestore {
           allow delete: if false;
         }
 
+        match /history/{entryId} {
+          // Same visibility rule as location/current: hidden members' history is unreadable
+          // server-side to anyone but themselves.
+          allow read: if signedIn() &&
+            (uid == request.auth.uid || (isMember(code) && isVisibleMember(code, uid)));
+
+          // Append-only — no update/delete, matching the client's write pattern (it only ever add()s).
+          allow create: if signedIn() && uid == request.auth.uid
+            && request.resource.data.keys().hasOnly(['lat', 'lng', 'timestamp'])
+            && request.resource.data.lat is number
+            && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+            && request.resource.data.lng is number
+            && request.resource.data.lng >= -180 && request.resource.data.lng <= 180;
+
+          allow update, delete: if false;
+        }
+
         // Phase 2 (schema-compatible, rules to add later): match /../pins/{pinId} { ... }
-        // Phase 3 (schema-compatible, rules to add later): match /history/{entryId} { ... }
       }
     }
   }

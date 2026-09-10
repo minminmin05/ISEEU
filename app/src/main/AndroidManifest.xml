@@ -11,6 +11,7 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
 
     <application
         android:name=".ISEEUApplication"
@@ -43,6 +44,11 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
+
+        <!-- Only ever triggered by our own PendingIntent from ActivityRecognitionClient, never externally. -->
+        <receiver
+            android:name=".service.ActivityTransitionReceiver"
+            android:exported="false" />
 
     </application>
 

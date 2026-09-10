@@ -13,6 +13,7 @@ object FirestorePaths {
     private const val MEMBERS = "members"
     private const val LOCATION = "location"
     private const val LOCATION_DOC = "current"
+    private const val HISTORY = "history"
 
     fun familyDoc(db: FirebaseFirestore, familyCode: String): DocumentReference =
         db.collection(FAMILIES).document(familyCode)
@@ -25,4 +26,7 @@ object FirestorePaths {
 
     fun memberLocationDoc(db: FirebaseFirestore, familyCode: String, uid: String): DocumentReference =
         memberDoc(db, familyCode, uid).collection(LOCATION).document(LOCATION_DOC)
+
+    fun memberHistoryCollection(db: FirebaseFirestore, familyCode: String, uid: String): CollectionReference =
+        memberDoc(db, familyCode, uid).collection(HISTORY)
 }

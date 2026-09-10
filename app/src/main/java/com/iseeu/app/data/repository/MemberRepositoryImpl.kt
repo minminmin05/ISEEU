@@ -1,13 +1,19 @@
 package com.iseeu.app.data.repository
 
+import android.net.Uri
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
+import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
+import com.google.firebase.storage.FirebaseStorage
 import com.iseeu.app.data.remote.FirestorePaths
+import com.iseeu.app.data.remote.dto.HistoryEntryDto
 import com.iseeu.app.data.remote.dto.LocationDto
 import com.iseeu.app.data.remote.dto.MemberDto
+import com.iseeu.app.domain.model.ActivityStatus
 import com.iseeu.app.domain.model.FamilyMember
+import com.iseeu.app.domain.model.HistoryPoint
 import com.iseeu.app.domain.model.MemberLocation
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -19,6 +25,7 @@ import javax.inject.Singleton
 @Singleton
 class MemberRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
+    private val storage: FirebaseStorage,
 ) : MemberRepository {
 
     override fun observeMembers(familyCode: String, selfUid: String): Flow<List<FamilyMember>> = callbackFlow {
@@ -30,16 +37,7 @@ class MemberRepositoryImpl @Inject constructor(
         val locationListeners = mutableMapOf<String, ListenerRegistration>()
 
         fun emitCurrentState() {
-            val result = members.map { (uid, dto) ->
-                FamilyMember(
-                    uid = uid,
-                    displayName = dto.displayName,
-                    avatarColor = dto.avatarColor,
-                    isVisible = dto.isVisible,
-                    isSelf = uid == selfUid,
-                    location = locations[uid],
-                )
-            }
+            val result = members.map { (uid, dto) -> dto.toDomain(uid, selfUid, locations[uid]) }
             trySend(result)
         }
 
@@ -89,14 +87,7 @@ class MemberRepositoryImpl @Inject constructor(
     override suspend fun getMemberOnce(familyCode: String, uid: String): FamilyMember? {
         val doc = FirestorePaths.memberDoc(firestore, familyCode, uid).get().await()
         val dto = doc.toObject(MemberDto::class.java) ?: return null
-        return FamilyMember(
-            uid = uid,
-            displayName = dto.displayName,
-            avatarColor = dto.avatarColor,
-            isVisible = dto.isVisible,
-            isSelf = false,
-            location = null,
-        )
+        return dto.toDomain(uid, selfUid = uid, location = null)
     }
 
     override suspend fun updateProfile(familyCode: String, uid: String, displayName: String, avatarColor: String) {
@@ -108,6 +99,22 @@ class MemberRepositoryImpl @Inject constructor(
             ),
             SetOptions.merge(),
         ).await()
+    }
+
+    override suspend fun uploadAvatarPhoto(familyCode: String, uid: String, imageUri: Uri): String {
+        // Fixed, predictable path (not a random filename) so re-uploading overwrites the old
+        // photo instead of leaking orphaned files in Storage.
+        val ref = storage.reference.child("avatars/$familyCode/$uid.jpg")
+        ref.putFile(imageUri).await()
+        val url = ref.downloadUrl.await().toString()
+        FirestorePaths.memberDoc(firestore, familyCode, uid).set(
+            mapOf(
+                "avatarUrl" to url,
+                "profileUpdatedAt" to FieldValue.serverTimestamp(),
+            ),
+            SetOptions.merge(),
+        ).await()
+        return url
     }
 
     override suspend fun setVisibility(familyCode: String, uid: String, isVisible: Boolean) {
@@ -130,6 +137,46 @@ class MemberRepositoryImpl @Inject constructor(
         ).await()
     }
 
+    override suspend fun appendHistoryEntry(familyCode: String, uid: String, lat: Double, lng: Double) {
+        // Append-only — no retention/purge yet (tracked as a known gap, same as the README's
+        // other Phase-3-pulled-forward notes). Fine at this scale; revisit if storage becomes a concern.
+        FirestorePaths.memberHistoryCollection(firestore, familyCode, uid).add(
+            mapOf(
+                "lat" to lat,
+                "lng" to lng,
+                "timestamp" to FieldValue.serverTimestamp(),
+            ),
+        ).await()
+    }
+
+    override fun observeHistory(familyCode: String, uid: String, limit: Long): Flow<List<HistoryPoint>> = callbackFlow {
+        val listener = FirestorePaths.memberHistoryCollection(firestore, familyCode, uid)
+            .orderBy("timestamp", Query.Direction.DESCENDING)
+            .limit(limit)
+            .addSnapshotListener { snapshot, _ ->
+                val points = snapshot?.documents.orEmpty().mapNotNull { doc ->
+                    val dto = doc.toObject(HistoryEntryDto::class.java) ?: return@mapNotNull null
+                    val ts = dto.timestamp ?: return@mapNotNull null
+                    HistoryPoint(lat = dto.lat, lng = dto.lng, timestampMillis = ts.toDate().time)
+                }
+                trySend(points)
+            }
+        awaitClose { listener.remove() }
+    }
+
+    override suspend fun updateActivityStatus(familyCode: String, uid: String, status: ActivityStatus) {
+        val value = when (status) {
+            ActivityStatus.STILL -> "still"
+            ActivityStatus.WALKING -> "walking"
+            ActivityStatus.DRIVING -> "driving"
+            ActivityStatus.UNKNOWN -> null
+        }
+        FirestorePaths.memberDoc(firestore, familyCode, uid).set(
+            mapOf("activityStatus" to value),
+            SetOptions.merge(),
+        ).await()
+    }
+
     override suspend fun requestRefresh(familyCode: String, targetUid: String) {
         FirestorePaths.memberDoc(firestore, familyCode, targetUid).set(
             mapOf("refreshRequestedAt" to FieldValue.serverTimestamp()),
@@ -145,4 +192,15 @@ class MemberRepositoryImpl @Inject constructor(
             }
         awaitClose { listener.remove() }
     }
+
+    private fun MemberDto.toDomain(uid: String, selfUid: String, location: MemberLocation?) = FamilyMember(
+        uid = uid,
+        displayName = displayName,
+        avatarColor = avatarColor,
+        avatarUrl = avatarUrl,
+        isVisible = isVisible,
+        isSelf = uid == selfUid,
+        activityStatus = ActivityStatus.fromFirestoreValue(activityStatus),
+        location = location,
+    )
 }

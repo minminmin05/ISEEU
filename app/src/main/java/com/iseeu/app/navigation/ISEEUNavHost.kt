@@ -13,6 +13,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.iseeu.app.ui.history.HistoryScreen
 import com.iseeu.app.ui.map.MapScreen
 import com.iseeu.app.ui.onboarding.CreateFamilyScreen
 import com.iseeu.app.ui.onboarding.CreateOrJoinScreen
@@ -56,10 +57,16 @@ fun ISEEUNavHost(
             PermissionRationaleScreen(onAllGranted = { navController.goToMap() })
         }
         composable(Screen.Map.route) {
-            MapScreen(onOpenProfile = { navController.navigate(Screen.Profile.route) })
+            MapScreen(
+                onOpenProfile = { navController.navigate(Screen.Profile.route) },
+                onOpenHistory = { navController.navigate(Screen.History.route) },
+            )
         }
         composable(Screen.Profile.route) {
             ProfileScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.History.route) {
+            HistoryScreen(onBack = { navController.popBackStack() })
         }
     }
 }

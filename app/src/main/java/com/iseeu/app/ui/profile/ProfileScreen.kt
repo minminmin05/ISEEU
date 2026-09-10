@@ -1,6 +1,11 @@
 package com.iseeu.app.ui.profile
 
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -25,6 +32,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +42,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.iseeu.app.R
+import com.iseeu.app.ui.map.components.MemberAvatar
 import com.iseeu.app.util.AvatarColorPalette
 import com.iseeu.app.util.FamilyCodeGenerator
 
@@ -44,6 +53,15 @@ fun ProfileScreen(
     onBack: () -> Unit,
 ) {
     val context = LocalContext.current
+    val photoErrorRes = viewModel.photoErrorRes
+    LaunchedEffect(photoErrorRes) {
+        if (photoErrorRes != null) {
+            Toast.makeText(context, photoErrorRes, Toast.LENGTH_SHORT).show()
+        }
+    }
+    val photoPicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.PickVisualMedia(),
+    ) { uri -> uri?.let(viewModel::onPhotoPicked) }
 
     Scaffold(
         topBar = {
@@ -61,6 +79,43 @@ fun ProfileScreen(
             modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center,
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    MemberAvatar(
+                        displayName = viewModel.displayName,
+                        colorHex = viewModel.avatarColor,
+                        avatarUrl = viewModel.avatarUrl,
+                        size = 96.dp,
+                    )
+                    if (viewModel.isUploadingPhoto) {
+                        CircularProgressIndicator(modifier = Modifier.size(40.dp))
+                    }
+                }
+                Surface(
+                    shape = CircleShape,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier
+                        .size(32.dp)
+                        .align(Alignment.BottomEnd)
+                        .clip(CircleShape),
+                    onClick = {
+                        photoPicker.launch(
+                            PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly),
+                        )
+                    },
+                ) {
+                    Icon(
+                        Icons.Filled.Edit,
+                        contentDescription = stringResource(R.string.profile_change_photo),
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.padding(6.dp),
+                    )
+                }
+            }
+
             OutlinedTextField(
                 value = viewModel.displayName,
                 onValueChange = viewModel::onDisplayNameChanged,
