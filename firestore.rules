@@ -1,9 +1,77 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read, write: if false;
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function isMember(code) {
+      return signedIn() &&
+        exists(/databases/$(database)/documents/families/$(code)/members/$(request.auth.uid));
+    }
+
+    function isVisibleMember(code, uid) {
+      return get(/databases/$(database)/documents/families/$(code)/members/$(uid)).data.isVisible == true;
+    }
+
+    match /families/{code} {
+      // Needed so an unjoined client can validate a code during create/join — never lets codes be enumerated (see "allow list: false").
+      allow get: if signedIn();
+      allow list: if false;
+      allow create: if signedIn()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.keys().hasOnly(['createdAt', 'createdBy']);
+      allow update, delete: if false;
+
+      match /members/{uid} {
+        // "read" covers both get() and list() — this is what lets the roster listener query the whole collection.
+        allow read: if isMember(code);
+
+        allow create: if signedIn() && uid == request.auth.uid
+          && request.resource.data.keys().hasOnly(
+               ['displayName', 'avatarColor', 'isVisible', 'activityStatus', 'profileUpdatedAt'])
+          && request.resource.data.isVisible is bool
+          && request.resource.data.displayName is string
+          && request.resource.data.displayName.size() > 0
+          && request.resource.data.displayName.size() <= 40;
+
+        allow update: if signedIn() && (
+          // owner may update their own allowed fields
+          (uid == request.auth.uid &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(
+              ['displayName', 'avatarColor', 'isVisible', 'activityStatus', 'profileUpdatedAt', 'refreshRequestedAt']) &&
+            request.resource.data.displayName is string &&
+            request.resource.data.displayName.size() > 0 &&
+            request.resource.data.displayName.size() <= 40)
+          ||
+          // any other family member may touch ONLY refreshRequestedAt, and only on a currently-visible member
+          (uid != request.auth.uid && isMember(code) &&
+            request.resource.data.diff(resource.data).affectedKeys().hasOnly(['refreshRequestedAt']) &&
+            resource.data.isVisible == true)
+        );
+
+        allow delete: if false;
+
+        match /location/current {
+          // This is where the privacy toggle is actually enforced: hidden members' location is
+          // unreadable server-side, not just hidden client-side.
+          allow read: if signedIn() &&
+            (uid == request.auth.uid || (isMember(code) && isVisibleMember(code, uid)));
+
+          allow write: if signedIn() && uid == request.auth.uid
+            && request.resource.data.keys().hasOnly(['lat', 'lng', 'timestamp'])
+            && request.resource.data.lat is number
+            && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+            && request.resource.data.lng is number
+            && request.resource.data.lng >= -180 && request.resource.data.lng <= 180;
+
+          allow delete: if false;
+        }
+
+        // Phase 2 (schema-compatible, rules to add later): match /../pins/{pinId} { ... }
+        // Phase 3 (schema-compatible, rules to add later): match /history/{entryId} { ... }
+      }
     }
   }
 }
