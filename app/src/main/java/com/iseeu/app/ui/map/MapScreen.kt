@@ -31,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -38,6 +39,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.iseeu.app.R
 import com.iseeu.app.domain.model.FamilyMember
 import com.iseeu.app.ui.map.components.LastUpdatedLabel
 import com.iseeu.app.ui.map.components.MemberAvatar
@@ -60,7 +62,7 @@ fun MapScreen(
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(onClick = onOpenProfile) {
-                Icon(Icons.Filled.Person, contentDescription = "Profile")
+                Icon(Icons.Filled.Person, contentDescription = stringResource(R.string.profile_content_description))
             }
         },
         bottomBar = {
@@ -109,7 +111,7 @@ private fun MemberRosterRow(
                     )
                     if (!member.isVisible && !member.isSelf) {
                         Text(
-                            text = "Location hidden",
+                            text = stringResource(R.string.location_hidden),
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             style = MaterialTheme.typography.labelSmall,

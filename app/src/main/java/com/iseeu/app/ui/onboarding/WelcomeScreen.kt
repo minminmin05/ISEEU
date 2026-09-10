@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -44,7 +45,7 @@ fun WelcomeScreen(
         )
         Spacer(Modifier.height(24.dp))
         Text(
-            "Share your location with the people who matter most.",
+            stringResource(R.string.welcome_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center,
         )
@@ -52,7 +53,7 @@ fun WelcomeScreen(
         OutlinedTextField(
             value = viewModel.displayName,
             onValueChange = viewModel::onDisplayNameChanged,
-            label = { Text("Your name") },
+            label = { Text(stringResource(R.string.welcome_name_label)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -61,6 +62,6 @@ fun WelcomeScreen(
             onClick = onContinue,
             enabled = viewModel.displayName.isNotBlank(),
             modifier = Modifier.fillMaxWidth(),
-        ) { Text("Continue") }
+        ) { Text(stringResource(R.string.action_continue)) }
     }
 }

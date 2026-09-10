@@ -25,11 +25,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
+import com.iseeu.app.R
 import com.iseeu.app.util.PermissionUtils
 
 @Composable
@@ -65,8 +67,8 @@ fun PermissionRationaleScreen(
 
     when (viewModel.step) {
         PermissionStep.FOREGROUND_LOCATION -> PermissionStepContent(
-            title = "See your family on the map",
-            body = "ISEEU needs your location to show you on the map and share it with your family.",
+            title = stringResource(R.string.permission_location_title),
+            body = stringResource(R.string.permission_location_body),
             onAllow = {
                 foregroundLauncher.launch(
                     arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION),
@@ -74,14 +76,14 @@ fun PermissionRationaleScreen(
             },
         )
         PermissionStep.BACKGROUND_LOCATION -> PermissionStepContent(
-            title = "Keep sharing in the background",
-            body = "To keep your location up to date even when the app isn't open, allow location access \"All the time\" on the next screen.",
-            allowLabel = "Open settings",
+            title = stringResource(R.string.permission_background_title),
+            body = stringResource(R.string.permission_background_body),
+            allowLabel = stringResource(R.string.permission_open_settings),
             onAllow = { context.startActivity(PermissionUtils.appSettingsIntent(context)) },
         )
         PermissionStep.NOTIFICATIONS -> PermissionStepContent(
-            title = "Stay informed",
-            body = "ISEEU shows a persistent notification while it's sharing your location, so you always know it's active.",
+            title = stringResource(R.string.permission_notifications_title),
+            body = stringResource(R.string.permission_notifications_body),
             onAllow = {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                     notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -99,7 +101,7 @@ private fun PermissionStepContent(
     title: String,
     body: String,
     onAllow: () -> Unit,
-    allowLabel: String = "Allow",
+    allowLabel: String = stringResource(R.string.permission_allow),
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(24.dp),

@@ -1,3 +1,61 @@
 <resources>
     <string name="app_name">ISEEU</string>
+
+    <!-- Onboarding: Welcome -->
+    <string name="welcome_subtitle">แชร์ตำแหน่งของคุณกับคนที่คุณรัก</string>
+    <string name="welcome_name_label">ชื่อของคุณ</string>
+    <string name="action_continue">ดำเนินการต่อ</string>
+
+    <!-- Onboarding: Create or Join -->
+    <string name="get_started_title">เริ่มต้นใช้งาน</string>
+    <string name="create_family_button">สร้างครอบครัวใหม่</string>
+    <string name="create_family_hint">สร้างกลุ่มแล้วแชร์รหัสให้ครอบครัว</string>
+    <string name="join_family_button">เข้าร่วมด้วยรหัส</string>
+    <string name="join_family_hint">มีคนสร้างครอบครัวไว้แล้วใช่ไหม? กรอกรหัสที่ได้รับ</string>
+
+    <!-- Onboarding: Create Family -->
+    <string name="family_ready_title">ครอบครัวของคุณพร้อมแล้ว</string>
+    <string name="family_ready_subtitle">แชร์รหัสนี้ให้ครอบครัวเพื่อเข้าร่วม</string>
+    <string name="share_code_button">แชร์รหัส</string>
+    <string name="share_code_message">มาร่วมครอบครัวบน ISEEU กันนะ! ใช้รหัสนี้: %1$s</string>
+    <string name="try_again_button">ลองใหม่</string>
+
+    <!-- Onboarding: Join Family -->
+    <string name="join_family_title">กรอกรหัสครอบครัวของคุณ</string>
+    <string name="join_family_code_placeholder">XXX-XXX</string>
+
+    <!-- Onboarding: shared errors -->
+    <string name="error_generic">เกิดข้อผิดพลาด — ลองใหม่อีกครั้ง</string>
+    <string name="error_offline">ไม่มีอินเทอร์เน็ต — เชื่อมต่อแล้วลองใหม่</string>
+    <string name="error_family_not_found">ไม่พบครอบครัว — ตรวจสอบรหัสแล้วลองใหม่</string>
+
+    <!-- Permissions -->
+    <string name="permission_location_title">ดูตำแหน่งครอบครัวบนแผนที่</string>
+    <string name="permission_location_body">ISEEU ต้องใช้ตำแหน่งของคุณเพื่อแสดงบนแผนที่และแชร์ให้ครอบครัว</string>
+    <string name="permission_background_title">แชร์ตำแหน่งต่อเนื่องแม้ปิดแอป</string>
+    <string name="permission_background_body">เพื่อให้ตำแหน่งอัปเดตตลอด แม้ไม่ได้เปิดแอปอยู่ ให้เลือก \"อนุญาตตลอดเวลา\" ในหน้าถัดไป</string>
+    <string name="permission_open_settings">เปิดการตั้งค่า</string>
+    <string name="permission_notifications_title">รับการแจ้งเตือน</string>
+    <string name="permission_notifications_body">ISEEU จะแสดงการแจ้งเตือนค้างไว้ขณะแชร์ตำแหน่ง เพื่อให้คุณรู้ว่ากำลังทำงานอยู่</string>
+    <string name="permission_allow">อนุญาต</string>
+
+    <!-- Map -->
+    <string name="profile_content_description">โปรไฟล์</string>
+    <string name="location_hidden">ซ่อนตำแหน่ง</string>
+    <string name="no_location_yet">ยังไม่มีตำแหน่ง</string>
+
+    <!-- Profile -->
+    <string name="profile_title">โปรไฟล์ของคุณ</string>
+    <string name="back_content_description">ย้อนกลับ</string>
+    <string name="profile_display_name_label">ชื่อที่แสดง</string>
+    <string name="profile_avatar_color_label">สีไอคอนประจำตัว</string>
+    <string name="selected_content_description">เลือกแล้ว</string>
+    <string name="action_save">บันทึก</string>
+    <string name="profile_share_location_title">แชร์ตำแหน่งของฉัน</string>
+    <string name="profile_share_location_body">เมื่อปิด ครอบครัวจะไม่เห็นตำแหน่งของคุณเลย</string>
+    <string name="profile_family_code_label">รหัสครอบครัว</string>
+
+    <!-- Location foreground service notification -->
+    <string name="location_service_notification_title">กำลังแชร์ตำแหน่งของคุณ</string>
+    <string name="location_service_notification_body">ISEEU กำลังแชร์ตำแหน่งของคุณให้ครอบครัว</string>
 </resources>

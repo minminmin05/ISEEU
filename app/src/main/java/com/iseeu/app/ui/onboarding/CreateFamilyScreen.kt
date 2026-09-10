@@ -20,9 +20,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.iseeu.app.R
 import com.iseeu.app.util.FamilyCodeGenerator
 
 @Composable
@@ -44,10 +46,10 @@ fun CreateFamilyScreen(
     ) {
         when (val state = viewModel.uiState) {
             is OnboardingUiState.FamilyCreated -> {
-                Text("Your family is ready", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+                Text(stringResource(R.string.family_ready_title), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(8.dp))
                 Text(
-                    "Share this code with your family so they can join",
+                    stringResource(R.string.family_ready_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                 )
@@ -55,17 +57,17 @@ fun CreateFamilyScreen(
                 Text(FamilyCodeGenerator.format(state.code), style = MaterialTheme.typography.displaySmall)
                 Spacer(Modifier.height(24.dp))
                 OutlinedButton(onClick = { shareCode(context, state.code) }, modifier = Modifier.fillMaxWidth()) {
-                    Text("Share code")
+                    Text(stringResource(R.string.share_code_button))
                 }
                 Spacer(Modifier.height(12.dp))
                 Button(onClick = onContinue, modifier = Modifier.fillMaxWidth()) {
-                    Text("Continue")
+                    Text(stringResource(R.string.action_continue))
                 }
             }
             is OnboardingUiState.Error -> {
-                Text(state.message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+                Text(stringResource(state.messageRes), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = { viewModel.createFamily() }) { Text("Try again") }
+                Button(onClick = { viewModel.createFamily() }) { Text(stringResource(R.string.try_again_button)) }
             }
             else -> CircularProgressIndicator()
         }
@@ -76,7 +78,7 @@ private fun shareCode(context: Context, code: String) {
     val formatted = FamilyCodeGenerator.format(code)
     val sendIntent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, "Join our family on ISEEU! Use this code: $formatted")
+        putExtra(Intent.EXTRA_TEXT, context.getString(R.string.share_code_message, formatted))
     }
     context.startActivity(Intent.createChooser(sendIntent, null))
 }

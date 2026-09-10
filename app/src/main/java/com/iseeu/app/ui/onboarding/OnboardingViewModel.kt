@@ -1,10 +1,12 @@
 package com.iseeu.app.ui.onboarding
 
+import androidx.annotation.StringRes
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iseeu.app.R
 import com.iseeu.app.data.local.PrefsDataStore
 import com.iseeu.app.data.repository.AuthRepository
 import com.iseeu.app.data.repository.CreateFamilyResult
@@ -20,7 +22,9 @@ sealed interface OnboardingUiState {
     data object Loading : OnboardingUiState
     data class FamilyCreated(val code: String) : OnboardingUiState
     data object Joined : OnboardingUiState
-    data class Error(val message: String) : OnboardingUiState
+    // Holds a string resource id (not text) so the ViewModel doesn't need a Context — the
+    // Composable resolves it with stringResource().
+    data class Error(@StringRes val messageRes: Int) : OnboardingUiState
 }
 
 @HiltViewModel
@@ -49,8 +53,8 @@ class OnboardingViewModel @Inject constructor(
                     prefsDataStore.saveOnboarding(result.code, authRepository.ensureSignedIn())
                     uiState = OnboardingUiState.FamilyCreated(result.code)
                 }
-                CreateFamilyResult.Offline -> uiState = OnboardingUiState.Error("You're offline — connect and try again")
-                CreateFamilyResult.Failed -> uiState = OnboardingUiState.Error("Something went wrong — try again")
+                CreateFamilyResult.Offline -> uiState = OnboardingUiState.Error(R.string.error_offline)
+                CreateFamilyResult.Failed -> uiState = OnboardingUiState.Error(R.string.error_generic)
             }
         }
     }
@@ -66,9 +70,9 @@ class OnboardingViewModel @Inject constructor(
                     prefsDataStore.saveOnboarding(code, authRepository.ensureSignedIn())
                     uiState = OnboardingUiState.Joined
                 }
-                JoinFamilyResult.NotFound -> uiState = OnboardingUiState.Error("Family not found — check the code and try again")
-                JoinFamilyResult.Offline -> uiState = OnboardingUiState.Error("You're offline — connect and try again")
-                JoinFamilyResult.Failed -> uiState = OnboardingUiState.Error("Something went wrong — try again")
+                JoinFamilyResult.NotFound -> uiState = OnboardingUiState.Error(R.string.error_family_not_found)
+                JoinFamilyResult.Offline -> uiState = OnboardingUiState.Error(R.string.error_offline)
+                JoinFamilyResult.Failed -> uiState = OnboardingUiState.Error(R.string.error_generic)
             }
         }
     }

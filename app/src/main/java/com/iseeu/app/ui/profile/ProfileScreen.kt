@@ -30,8 +30,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.iseeu.app.R
 import com.iseeu.app.util.AvatarColorPalette
 import com.iseeu.app.util.FamilyCodeGenerator
 
@@ -46,10 +48,10 @@ fun ProfileScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Your profile") },
+                title = { Text(stringResource(R.string.profile_title)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Filled.ArrowBack, contentDescription = stringResource(R.string.back_content_description))
                     }
                 },
             )
@@ -62,13 +64,13 @@ fun ProfileScreen(
             OutlinedTextField(
                 value = viewModel.displayName,
                 onValueChange = viewModel::onDisplayNameChanged,
-                label = { Text("Display name") },
+                label = { Text(stringResource(R.string.profile_display_name_label)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Avatar color", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.profile_avatar_color_label), style = MaterialTheme.typography.labelLarge)
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(AvatarColorPalette.colors) { hex ->
                         val color = Color(android.graphics.Color.parseColor(hex))
@@ -80,7 +82,7 @@ fun ProfileScreen(
                             if (hex == viewModel.avatarColor) {
                                 Icon(
                                     Icons.Filled.Check,
-                                    contentDescription = "Selected",
+                                    contentDescription = stringResource(R.string.selected_content_description),
                                     tint = Color.White,
                                     modifier = Modifier.padding(8.dp),
                                 )
@@ -90,7 +92,7 @@ fun ProfileScreen(
                 }
             }
 
-            TextButton(onClick = { viewModel.save() }) { Text("Save") }
+            TextButton(onClick = { viewModel.save() }) { Text(stringResource(R.string.action_save)) }
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -98,9 +100,9 @@ fun ProfileScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text("Share my location", style = MaterialTheme.typography.bodyLarge)
+                    Text(stringResource(R.string.profile_share_location_title), style = MaterialTheme.typography.bodyLarge)
                     Text(
-                        "When off, your family can't see your location at all",
+                        stringResource(R.string.profile_share_location_body),
                         style = MaterialTheme.typography.bodySmall,
                     )
                 }
@@ -111,7 +113,7 @@ fun ProfileScreen(
             }
 
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("Family code", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.profile_family_code_label), style = MaterialTheme.typography.labelLarge)
                 Text(FamilyCodeGenerator.format(viewModel.familyCode), style = MaterialTheme.typography.headlineSmall)
             }
         }

@@ -95,8 +95,8 @@ class LocationForegroundService : Service() {
             PendingIntent.FLAG_IMMUTABLE,
         )
         return NotificationCompat.Builder(this, ISEEUApplication.LOCATION_CHANNEL_ID)
-            .setContentTitle("Sharing your location")
-            .setContentText("ISEEU is sharing your location with your family")
+            .setContentTitle(getString(R.string.location_service_notification_title))
+            .setContentText(getString(R.string.location_service_notification_body))
             .setSmallIcon(R.drawable.ic_notification)
             .setOngoing(true)
             .setContentIntent(openAppIntent)

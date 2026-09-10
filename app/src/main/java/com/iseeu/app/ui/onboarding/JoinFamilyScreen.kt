@@ -22,9 +22,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.iseeu.app.R
 
 @Composable
 fun JoinFamilyScreen(
@@ -43,12 +45,12 @@ fun JoinFamilyScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Text("Enter your family code", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
+        Text(stringResource(R.string.join_family_title), style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center)
         Spacer(Modifier.height(24.dp))
         OutlinedTextField(
             value = codeInput,
             onValueChange = { codeInput = it },
-            label = { Text("XXX-XXX") },
+            label = { Text(stringResource(R.string.join_family_code_placeholder)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -56,7 +58,7 @@ fun JoinFamilyScreen(
         val state = viewModel.uiState
         if (state is OnboardingUiState.Error) {
             Spacer(Modifier.height(12.dp))
-            Text(state.message, color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
+            Text(stringResource(state.messageRes), color = MaterialTheme.colorScheme.error, textAlign = TextAlign.Center)
         }
 
         Spacer(Modifier.height(16.dp))
@@ -67,7 +69,7 @@ fun JoinFamilyScreen(
                 onClick = { viewModel.joinFamily(codeInput) },
                 enabled = codeInput.isNotBlank(),
                 modifier = Modifier.fillMaxWidth(),
-            ) { Text("Join family") }
+            ) { Text(stringResource(R.string.join_family_button)) }
         }
     }
 }

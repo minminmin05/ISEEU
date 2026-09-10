@@ -5,11 +5,13 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.iseeu.app.R
 
 @Composable
 fun LastUpdatedLabel(timestampMillis: Long?, modifier: Modifier = Modifier) {
     val text = if (timestampMillis == null) {
-        "No location yet"
+        stringResource(R.string.no_location_yet)
     } else {
         DateUtils.getRelativeTimeSpanString(
             timestampMillis,
