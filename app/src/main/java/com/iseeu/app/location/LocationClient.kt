@@ -3,6 +3,7 @@ package com.iseeu.app.location
 import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
+import android.os.Looper
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -40,7 +41,10 @@ class LocationClient @Inject constructor(
             }
         }
 
-        fusedClient.requestLocationUpdates(request, callback, null)
+        // Passing null here crashes with "invalid null looper" when called from a coroutine
+        // dispatcher thread (no Looper of its own) rather than the main thread — found via
+        // testing, since this collects from a background-service coroutine scope.
+        fusedClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
         awaitClose { fusedClient.removeLocationUpdates(callback) }
     }
 
