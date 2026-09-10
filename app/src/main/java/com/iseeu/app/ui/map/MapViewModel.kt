@@ -1,11 +1,14 @@
 package com.iseeu.app.ui.map
 
+import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.iseeu.app.data.local.PrefsDataStore
 import com.iseeu.app.data.repository.AuthRepository
 import com.iseeu.app.data.repository.MemberRepository
 import com.iseeu.app.domain.model.FamilyMember
+import com.iseeu.app.service.LocationForegroundService
+import com.iseeu.app.util.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +41,22 @@ class MapViewModel @Inject constructor(
                 }
             } catch (e: com.google.firebase.FirebaseException) {
                 // leave _members as-is; nothing else to do without a retry UI in Phase 1
+            }
+        }
+    }
+
+    /**
+     * The only two places the service is started are here (reaching the map — covers "just
+     * finished onboarding" and "cold app relaunch") and Profile's own toggle. Safe to call
+     * every time the map appears: starting an already-running service is a no-op.
+     */
+    fun ensureTrackingStarted(context: Context) {
+        viewModelScope.launch {
+            val sharingEnabled = prefsDataStore.isSharingEnabled.first()
+            val hasPermissions = PermissionUtils.hasForegroundLocationPermission(context) &&
+                PermissionUtils.hasBackgroundLocationPermission(context)
+            if (sharingEnabled && hasPermissions) {
+                LocationForegroundService.start(context)
             }
         }
     }
