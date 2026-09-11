@@ -6,6 +6,8 @@ import com.iseeu.app.data.repository.FamilyRepository
 import com.iseeu.app.data.repository.FamilyRepositoryImpl
 import com.iseeu.app.data.repository.MemberRepository
 import com.iseeu.app.data.repository.MemberRepositoryImpl
+import com.iseeu.app.data.repository.PinRepository
+import com.iseeu.app.data.repository.PinRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -27,4 +29,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindMemberRepository(impl: MemberRepositoryImpl): MemberRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindPinRepository(impl: PinRepositoryImpl): PinRepository
 }

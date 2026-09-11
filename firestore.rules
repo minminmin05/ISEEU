@@ -30,20 +30,23 @@ service cloud.firestore {
 
         allow create: if signedIn() && uid == request.auth.uid
           && request.resource.data.keys().hasOnly(
-               ['displayName', 'avatarColor', 'avatarUrl', 'isVisible', 'activityStatus', 'profileUpdatedAt'])
+               ['displayName', 'avatarColor', 'avatarPhotoBase64', 'isVisible', 'activityStatus', 'profileUpdatedAt'])
           && request.resource.data.isVisible is bool
           && request.resource.data.displayName is string
           && request.resource.data.displayName.size() > 0
-          && request.resource.data.displayName.size() <= 40;
+          && request.resource.data.displayName.size() <= 40
+          && (!('avatarPhotoBase64' in request.resource.data) || request.resource.data.avatarPhotoBase64.size() < 400000);
 
         allow update: if signedIn() && (
           // owner may update their own allowed fields
           (uid == request.auth.uid &&
             request.resource.data.diff(resource.data).affectedKeys().hasOnly(
-              ['displayName', 'avatarColor', 'avatarUrl', 'isVisible', 'activityStatus', 'profileUpdatedAt', 'refreshRequestedAt']) &&
+              ['displayName', 'avatarColor', 'avatarPhotoBase64', 'isVisible', 'activityStatus',
+               'currentPinId', 'currentPinEnteredAt', 'profileUpdatedAt', 'refreshRequestedAt']) &&
             request.resource.data.displayName is string &&
             request.resource.data.displayName.size() > 0 &&
-            request.resource.data.displayName.size() <= 40)
+            request.resource.data.displayName.size() <= 40 &&
+            (!('avatarPhotoBase64' in request.resource.data) || request.resource.data.avatarPhotoBase64.size() < 400000))
           ||
           // any other family member may touch ONLY refreshRequestedAt, and only on a currently-visible member
           (uid != request.auth.uid && isMember(code) &&
@@ -86,7 +89,30 @@ service cloud.firestore {
           allow update, delete: if false;
         }
 
-        // Phase 2 (schema-compatible, rules to add later): match /../pins/{pinId} { ... }
+      }
+
+      match /pins/{pinId} {
+        // Saved places (Life360-style "Home"/"School") — family-scoped, not tied to one member.
+        allow read: if isMember(code);
+
+        allow create: if isMember(code)
+          && request.resource.data.createdBy == request.auth.uid
+          && request.resource.data.keys().hasOnly(['name', 'lat', 'lng', 'radiusMeters', 'type', 'createdBy', 'createdAt'])
+          && request.resource.data.name is string
+          && request.resource.data.name.size() > 0
+          && request.resource.data.name.size() <= 40
+          && request.resource.data.lat is number
+          && request.resource.data.lat >= -90 && request.resource.data.lat <= 90
+          && request.resource.data.lng is number
+          && request.resource.data.lng >= -180 && request.resource.data.lng <= 180
+          && request.resource.data.radiusMeters is number
+          && request.resource.data.radiusMeters > 0 && request.resource.data.radiusMeters <= 2000
+          && request.resource.data.type in ['home', 'school', 'work', 'other'];
+
+        // Any family member may remove a place — same trust model as touching another
+        // member's refreshRequestedAt: everyone in a ≤10-person family is already trusted.
+        allow update: if false;
+        allow delete: if isMember(code);
       }
     }
   }

@@ -4,10 +4,12 @@ data class FamilyMember(
     val uid: String,
     val displayName: String,
     val avatarColor: String,
-    val avatarUrl: String?,
+    val avatarPhotoBase64: String?,
     val isVisible: Boolean,
     val isSelf: Boolean,
     val activityStatus: ActivityStatus,
+    val currentPinId: String?,
+    val currentPinEnteredAtMillis: Long?,
     val location: MemberLocation?,
 )
 

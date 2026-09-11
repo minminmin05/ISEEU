@@ -1,12 +1,20 @@
 package com.iseeu.app.ui.map
 
 import android.content.Context
+import androidx.annotation.StringRes
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.iseeu.app.R
 import com.iseeu.app.data.local.PrefsDataStore
 import com.iseeu.app.data.repository.AuthRepository
 import com.iseeu.app.data.repository.MemberRepository
+import com.iseeu.app.data.repository.PinRepository
 import com.iseeu.app.domain.model.FamilyMember
+import com.iseeu.app.domain.model.Pin
+import com.iseeu.app.domain.model.PinType
 import com.iseeu.app.service.LocationForegroundService
 import com.iseeu.app.util.PermissionUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -22,10 +30,18 @@ class MapViewModel @Inject constructor(
     private val memberRepository: MemberRepository,
     private val authRepository: AuthRepository,
     private val prefsDataStore: PrefsDataStore,
+    private val pinRepository: PinRepository,
 ) : ViewModel() {
 
     private val _members = MutableStateFlow<List<FamilyMember>>(emptyList())
     val members: StateFlow<List<FamilyMember>> = _members.asStateFlow()
+
+    private val _pins = MutableStateFlow<List<Pin>>(emptyList())
+    val pins: StateFlow<List<Pin>> = _pins.asStateFlow()
+
+    @get:StringRes
+    var pinErrorRes by mutableStateOf<Int?>(null)
+        private set
 
     private val lastRefreshRequestAt = mutableMapOf<String, Long>()
 
@@ -43,6 +59,40 @@ class MapViewModel @Inject constructor(
                 // leave _members as-is; nothing else to do without a retry UI in Phase 1
             }
         }
+        viewModelScope.launch {
+            val familyCode = prefsDataStore.familyCode.first() ?: return@launch
+            pinRepository.observePins(familyCode).collect { _pins.value = it }
+        }
+    }
+
+    fun addPin(name: String, lat: Double, lng: Double, type: PinType) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            val familyCode = prefsDataStore.familyCode.first() ?: return@launch
+            try {
+                val uid = authRepository.ensureSignedIn()
+                pinRepository.addPin(familyCode, uid, name.trim(), lat, lng, type)
+            } catch (e: com.google.firebase.FirebaseException) {
+                android.util.Log.e("MapViewModel", "addPin failed", e)
+                pinErrorRes = R.string.pin_save_error
+            }
+        }
+    }
+
+    fun deletePin(pinId: String) {
+        viewModelScope.launch {
+            val familyCode = prefsDataStore.familyCode.first() ?: return@launch
+            try {
+                pinRepository.deletePin(familyCode, pinId)
+            } catch (e: com.google.firebase.FirebaseException) {
+                android.util.Log.e("MapViewModel", "deletePin failed", e)
+                pinErrorRes = R.string.pin_save_error
+            }
+        }
+    }
+
+    fun consumePinError() {
+        pinErrorRes = null
     }
 
     /**

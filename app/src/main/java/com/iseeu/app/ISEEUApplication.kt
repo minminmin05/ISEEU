@@ -18,6 +18,7 @@ class ISEEUApplication : Application() {
         Configuration.getInstance().userAgentValue = packageName
 
         createLocationNotificationChannel()
+        createPlaceAlertsNotificationChannel()
     }
 
     private fun createLocationNotificationChannel() {
@@ -33,7 +34,20 @@ class ISEEUApplication : Application() {
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
     }
 
+    private fun createPlaceAlertsNotificationChannel() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) return
+        val channel = NotificationChannel(
+            PLACE_ALERTS_CHANNEL_ID,
+            "Place arrivals and departures",
+            NotificationManager.IMPORTANCE_HIGH,
+        ).apply {
+            description = "Alerts when a family member arrives at or leaves a saved place"
+        }
+        getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
+    }
+
     companion object {
         const val LOCATION_CHANNEL_ID = "location_sharing"
+        const val PLACE_ALERTS_CHANNEL_ID = "place_alerts"
     }
 }

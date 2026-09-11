@@ -77,13 +77,11 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.auth)
-    implementation(libs.firebase.storage)
 
     implementation(libs.play.services.location)
     implementation(libs.kotlinx.coroutines.play.services)
 
     implementation(libs.osmdroid.android)
 
-    implementation(libs.coil.compose)
-    implementation(libs.coil.network.okhttp)
+    implementation(libs.androidx.exifinterface)
 }

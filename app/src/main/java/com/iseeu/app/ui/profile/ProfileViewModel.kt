@@ -15,9 +15,12 @@ import com.iseeu.app.data.repository.AuthRepository
 import com.iseeu.app.data.repository.MemberRepository
 import com.iseeu.app.service.LocationForegroundService
 import com.iseeu.app.util.AvatarColorPalette
+import com.iseeu.app.util.AvatarImageProcessor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,7 +34,7 @@ class ProfileViewModel @Inject constructor(
         private set
     var avatarColor by mutableStateOf(AvatarColorPalette.colors.first())
         private set
-    var avatarUrl by mutableStateOf<String?>(null)
+    var avatarPhotoBase64 by mutableStateOf<String?>(null)
         private set
     var isUploadingPhoto by mutableStateOf(false)
         private set
@@ -54,7 +57,7 @@ class ProfileViewModel @Inject constructor(
                 memberRepository.getMemberOnce(code, uid)?.let { member ->
                     displayName = member.displayName
                     avatarColor = member.avatarColor
-                    avatarUrl = member.avatarUrl
+                    avatarPhotoBase64 = member.avatarPhotoBase64
                 }
             } catch (e: FirebaseException) {
                 // leave the local defaults in place; the user can still edit and retry save()
@@ -70,7 +73,7 @@ class ProfileViewModel @Inject constructor(
         avatarColor = value
     }
 
-    fun onPhotoPicked(imageUri: Uri) {
+    fun onPhotoPicked(imageUri: Uri, context: Context) {
         viewModelScope.launch {
             isUploadingPhoto = true
             photoErrorRes = null
@@ -80,9 +83,14 @@ class ProfileViewModel @Inject constructor(
                 return@launch
             }
             try {
+                val encoded = withContext(Dispatchers.IO) {
+                    AvatarImageProcessor.compressToBase64(context, imageUri)
+                } ?: throw IllegalStateException("could not decode picked image")
                 val uid = authRepository.ensureSignedIn()
-                avatarUrl = memberRepository.uploadAvatarPhoto(code, uid, imageUri)
+                memberRepository.updateAvatarPhoto(code, uid, encoded)
+                avatarPhotoBase64 = encoded
             } catch (e: Exception) {
+                android.util.Log.e("ProfileViewModel", "photo upload failed", e)
                 photoErrorRes = R.string.profile_photo_upload_error
             } finally {
                 isUploadingPhoto = false

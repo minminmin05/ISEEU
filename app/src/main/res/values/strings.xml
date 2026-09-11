@@ -44,14 +44,38 @@
     <!-- Map -->
     <string name="profile_content_description">โปรไฟล์</string>
     <string name="history_content_description">ประวัติที่อยู่</string>
+    <string name="settings_content_description">ตั้งค่า</string>
+    <string name="family_tab_content_description">ครอบครัว</string>
     <string name="location_hidden">ซ่อนตำแหน่ง</string>
     <string name="no_location_yet">ยังไม่มีตำแหน่ง</string>
+    <string name="action_cancel">ยกเลิก</string>
+    <string name="action_delete">ลบ</string>
+
+    <!-- Saved places (pins) -->
+    <string name="add_pin_content_description">เพิ่มสถานที่</string>
+    <string name="add_pin_choose_location_title">เลือกตำแหน่งที่จะปัก</string>
+    <string name="add_pin_use_current_location">ตำแหน่งปัจจุบันของฉัน</string>
+    <string name="add_pin_choose_manually">เลือกเอง</string>
+    <string name="add_pin_choose_manually_hint">กดค้างบนแผนที่ตรงจุดที่ต้องการปักหมุด</string>
+    <string name="add_pin_no_location_yet">ยังไม่ทราบตำแหน่งปัจจุบัน ลองอีกครั้งสักครู่</string>
+    <string name="add_pin_title">เพิ่มสถานที่</string>
+    <string name="add_pin_name_label">ชื่อสถานที่ เช่น บ้าน, โรงเรียน</string>
+    <string name="pin_type_home">บ้าน</string>
+    <string name="pin_type_school">โรงเรียน</string>
+    <string name="pin_type_work">ที่ทำงาน</string>
+    <string name="pin_type_other">อื่นๆ</string>
+    <string name="pin_detail_body">ครอบครัวจะได้รับแจ้งเตือนเมื่อมีใครมาถึงหรือออกจากที่นี่</string>
+    <string name="pin_save_error">บันทึกหมุดไม่สำเร็จ ลองใหม่อีกครั้ง</string>
+    <string name="place_arrived_body">มาถึง %1$s แล้ว</string>
+    <string name="place_left_body">ออกจาก %1$s แล้ว</string>
 
     <!-- History -->
     <string name="history_title">ประวัติที่อยู่</string>
     <string name="history_empty">ยังไม่มีประวัติที่อยู่สำหรับคนนี้</string>
-    <string name="history_marker_start">จุดเริ่มต้น</string>
-    <string name="history_marker_latest">ล่าสุด</string>
+    <string name="history_currently_at">อยู่ที่ %1$s</string>
+    <string name="history_since">ตั้งแต่ %1$s</string>
+    <string name="trip_distance_km">%1$.1f กม.</string>
+    <string name="trip_time_range">%1$s - %2$s (%3$d นาที)</string>
 
     <!-- Profile -->
     <string name="profile_title">โปรไฟล์ของคุณ</string>

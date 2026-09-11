@@ -50,6 +50,11 @@
             android:name=".service.ActivityTransitionReceiver"
             android:exported="false" />
 
+        <!-- Only ever triggered by our own PendingIntent from GeofencingClient, never externally. -->
+        <receiver
+            android:name=".service.PinGeofenceReceiver"
+            android:exported="false" />
+
     </application>
 
 </manifest>

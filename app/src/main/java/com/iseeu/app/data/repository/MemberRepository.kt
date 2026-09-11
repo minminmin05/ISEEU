@@ -1,6 +1,5 @@
 package com.iseeu.app.data.repository
 
-import android.net.Uri
 import com.iseeu.app.domain.model.ActivityStatus
 import com.iseeu.app.domain.model.FamilyMember
 import com.iseeu.app.domain.model.HistoryPoint
@@ -14,8 +13,8 @@ interface MemberRepository {
 
     suspend fun updateProfile(familyCode: String, uid: String, displayName: String, avatarColor: String)
 
-    /** Uploads to Firebase Storage and saves the resulting download URL on the member doc. Returns the URL. */
-    suspend fun uploadAvatarPhoto(familyCode: String, uid: String, imageUri: Uri): String
+    /** Saves an already-compressed, Base64-encoded JPEG (see AvatarImageProcessor) on the member doc. */
+    suspend fun updateAvatarPhoto(familyCode: String, uid: String, base64Jpeg: String)
 
     suspend fun setVisibility(familyCode: String, uid: String, isVisible: Boolean)
 
@@ -28,6 +27,9 @@ interface MemberRepository {
     fun observeHistory(familyCode: String, uid: String, limit: Long = 500): Flow<List<HistoryPoint>>
 
     suspend fun updateActivityStatus(familyCode: String, uid: String, status: ActivityStatus)
+
+    /** Sets/clears which saved place (if any) this member is currently inside — see PinGeofenceReceiver. */
+    suspend fun updateCurrentPin(familyCode: String, uid: String, pinId: String?)
 
     /** Asks another member's device to push a fresh fix — see LocationForegroundService, which is what actually listens for this. */
     suspend fun requestRefresh(familyCode: String, targetUid: String)

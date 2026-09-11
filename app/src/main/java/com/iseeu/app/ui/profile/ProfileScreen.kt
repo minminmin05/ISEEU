@@ -61,7 +61,7 @@ fun ProfileScreen(
     }
     val photoPicker = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia(),
-    ) { uri -> uri?.let(viewModel::onPhotoPicked) }
+    ) { uri -> uri?.let { viewModel.onPhotoPicked(it, context) } }
 
     Scaffold(
         topBar = {
@@ -87,7 +87,7 @@ fun ProfileScreen(
                     MemberAvatar(
                         displayName = viewModel.displayName,
                         colorHex = viewModel.avatarColor,
-                        avatarUrl = viewModel.avatarUrl,
+                        avatarPhotoBase64 = viewModel.avatarPhotoBase64,
                         size = 96.dp,
                     )
                     if (viewModel.isUploadingPhoto) {

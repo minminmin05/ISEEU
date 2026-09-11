@@ -1,12 +1,10 @@
 package com.iseeu.app.data.repository
 
-import android.net.Uri
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.ListenerRegistration
 import com.google.firebase.firestore.Query
 import com.google.firebase.firestore.SetOptions
-import com.google.firebase.storage.FirebaseStorage
 import com.iseeu.app.data.remote.FirestorePaths
 import com.iseeu.app.data.remote.dto.HistoryEntryDto
 import com.iseeu.app.data.remote.dto.LocationDto
@@ -25,7 +23,6 @@ import javax.inject.Singleton
 @Singleton
 class MemberRepositoryImpl @Inject constructor(
     private val firestore: FirebaseFirestore,
-    private val storage: FirebaseStorage,
 ) : MemberRepository {
 
     override fun observeMembers(familyCode: String, selfUid: String): Flow<List<FamilyMember>> = callbackFlow {
@@ -101,20 +98,14 @@ class MemberRepositoryImpl @Inject constructor(
         ).await()
     }
 
-    override suspend fun uploadAvatarPhoto(familyCode: String, uid: String, imageUri: Uri): String {
-        // Fixed, predictable path (not a random filename) so re-uploading overwrites the old
-        // photo instead of leaking orphaned files in Storage.
-        val ref = storage.reference.child("avatars/$familyCode/$uid.jpg")
-        ref.putFile(imageUri).await()
-        val url = ref.downloadUrl.await().toString()
+    override suspend fun updateAvatarPhoto(familyCode: String, uid: String, base64Jpeg: String) {
         FirestorePaths.memberDoc(firestore, familyCode, uid).set(
             mapOf(
-                "avatarUrl" to url,
+                "avatarPhotoBase64" to base64Jpeg,
                 "profileUpdatedAt" to FieldValue.serverTimestamp(),
             ),
             SetOptions.merge(),
         ).await()
-        return url
     }
 
     override suspend fun setVisibility(familyCode: String, uid: String, isVisible: Boolean) {
@@ -177,6 +168,15 @@ class MemberRepositoryImpl @Inject constructor(
         ).await()
     }
 
+    override suspend fun updateCurrentPin(familyCode: String, uid: String, pinId: String?) {
+        val fields = if (pinId != null) {
+            mapOf("currentPinId" to pinId, "currentPinEnteredAt" to FieldValue.serverTimestamp())
+        } else {
+            mapOf("currentPinId" to null)
+        }
+        FirestorePaths.memberDoc(firestore, familyCode, uid).set(fields, SetOptions.merge()).await()
+    }
+
     override suspend fun requestRefresh(familyCode: String, targetUid: String) {
         FirestorePaths.memberDoc(firestore, familyCode, targetUid).set(
             mapOf("refreshRequestedAt" to FieldValue.serverTimestamp()),
@@ -197,10 +197,12 @@ class MemberRepositoryImpl @Inject constructor(
         uid = uid,
         displayName = displayName,
         avatarColor = avatarColor,
-        avatarUrl = avatarUrl,
+        avatarPhotoBase64 = avatarPhotoBase64,
         isVisible = isVisible,
         isSelf = uid == selfUid,
         activityStatus = ActivityStatus.fromFirestoreValue(activityStatus),
+        currentPinId = currentPinId,
+        currentPinEnteredAtMillis = currentPinEnteredAt?.toDate()?.time,
         location = location,
     )
 }

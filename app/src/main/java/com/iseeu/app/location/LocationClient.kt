@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.location.Location
 import android.os.Looper
+import android.util.Log
 import com.google.android.gms.location.CurrentLocationRequest
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
@@ -37,14 +38,18 @@ class LocationClient @Inject constructor(
 
         val callback = object : LocationCallback() {
             override fun onLocationResult(result: LocationResult) {
+                Log.d("ISEEU_DIAG", "onLocationResult: ${result.lastLocation}")
                 result.lastLocation?.let { trySend(it) }
             }
         }
 
+        Log.d("ISEEU_DIAG", "continuousUpdates: about to call requestLocationUpdates")
         // Passing null here crashes with "invalid null looper" when called from a coroutine
         // dispatcher thread (no Looper of its own) rather than the main thread — found via
         // testing, since this collects from a background-service coroutine scope.
         fusedClient.requestLocationUpdates(request, callback, Looper.getMainLooper())
+            .addOnSuccessListener { Log.d("ISEEU_DIAG", "requestLocationUpdates: success") }
+            .addOnFailureListener { Log.e("ISEEU_DIAG", "requestLocationUpdates: FAILED", it) }
         awaitClose { fusedClient.removeLocationUpdates(callback) }
     }
 
